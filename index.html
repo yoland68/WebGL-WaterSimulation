@@ -1,0 +1,150 @@
+<!doctype html>
+<head>
+<link rel="stylesheet" href="css/yolo.css" />
+<script src="js/gl_lib1.js"></script>
+
+</head>
+<body>
+<div align="center" style="margin-top: 20px;">
+<canvas id="canvas1" width="640" height="640"></canvas>
+<div style="position: fixed; left: 20px; top: 20px;">
+  <h1><span style="color:#cb6868;">Zen</span> Garden <br>Water Simulation</h1>
+</div>
+<div style="position: fixed; right: 20px; top: 20px;">
+  <div class="button"><a href="#" class="add" id="pauseThis">Play/Pause</a></div>
+</div>
+<div style="position: fixed; right: 20px; top: 100px;">
+  <div align="left">Speed:</div>
+  <div align="right"><input type="text" id="speed"/></div>
+  <div align="left">Frequency:</div>
+  <div align="right"><input type="text" id="freq"/></div>
+  <div align="left">Amplitude:</div>
+  <div align="right"><input type="text" id="amp"/></div>
+</div>
+<audio id="pplayer" autoplay="false" loop="true">
+        <source src="sound/pee.mp3" type="audio/mpeg" />     
+      </audio>
+</body>
+
+<script>
+var yourAudio = document.getElementById('pplayer'),
+    ctrl = document.getElementById('pauseThis');
+
+var speed_input = document.getElementById('speed'),
+    freq_input = document.getElementById('freq'),
+    amp_input = document.getElementById('amp');
+
+speed_input.value = 0.1;
+freq_input.value = 80;
+amp_input.value = 0.3;
+
+
+function changeSpeed() {
+  // console.log(speed_input.value);
+  speed_input.value = 0.1;
+}
+
+function changeFreq() {
+  freq_input.value = 80; 
+
+}
+
+function changeAmp() {
+  amp_input.value = 0.3; 
+
+}
+
+speed_input.addEventListener('blur', changeSpeed, false);
+freq_input.addEventListener('blur', changeFreq, false);
+amp_input.addEventListener('blur', changeAmp, false);
+
+ctrl.onclick = function () {
+
+    // Update the Button
+    var pause = yourAudio.paused;
+    console.log(pause);
+    ctrl.innerHTML = pause ? 'Pause' : 'Play';
+
+    // Update the Audio
+    var method = pause ? 'play' : 'pause';
+    yourAudio[method]();
+
+    // Prevent Default Action
+    return false;
+};
+
+var foo = '0.2';
+var bar = '80.';
+</script>
+
+<script>
+
+var vertexShader = [
+,'   attribute vec3 a_pos;'
+,'   varying   vec3 v_pos;'
+,'   void main() {'
+,'      gl_Position = vec4(a_pos, 1.0);'
+,'      v_pos = a_pos;'
+,'   }'
+].join('\n');
+
+// THE FRAGMENT SHADER RUNS ONCE PER PIXEL FRAGMENT.
+
+/*
+   Your assignment is to write a more interesting version of the
+   fragment shader program.  Try to have fun with it -- use "u_time"
+   to create animated patterns, and "u_mouse" to make it responsive
+   to a user's mouse gestures.
+*/
+
+var fragmentShader = [
+,'   precision mediump float;'
+,'   uniform float u_time;'
+,'   uniform vec3  u_mouse;'
+,'   varying vec3  v_pos;'
+,'   vec3 create_wave(float x, float y, float o_x, float o_y, float speed, float freq) {'
+,'      float dist = sqrt((x-o_x)*(x-o_x)+(y-o_y)*(y-o_y));' //Distance from the origin
+,'      float wave = sin(freq*(sqrt(dist+0.2)-speed*u_time));' // wave index: change from 0 to 1 as times moves, taking the sqrt of dist because the further it is, the longer the wavelength
+,'      float initial_amplitude = 0.3;'      // how strong the wave initially is
+,'      float amp = (1.5-dist)/2.;'                    // amplitute index: the height of a wave changes to the distance it travels
+,'      if (amp < 0.) { amp = 0.; };'
+,'      float a = initial_amplitude*amp*wave;' 
+,'      float b = initial_amplitude*amp*wave;'
+,'      float c = initial_amplitude*amp*wave;' 
+,'      return vec3(a,b,c);'
+,'   }'
+,'   '
+,'   '
+,'   void main() {'
+,'      float x = v_pos.x;'
+,'      float y = v_pos.y;'
+// ,'      vec3 wave1 = create_wave(x, y, 0., 0., 0.1, 80.);'
+,'      vec3 wave1 = create_wave(x, y, 0., 0., '+foo+', '+bar+');'
+// ,'      vec3 wave2 = vec3(0., 0., 0.);'
+,'      vec3 wave2 = create_wave(x, y, u_mouse.x, u_mouse.y, 0.1, 80.);'
+// ,'      float p_r = 0.;'
+// ,'      if (u_mouse.z == 1. && p_r != 0.) {'
+// ,'          p_r = r;'
+// ,'          float p_g = g;'
+// ,'          float p_b = b;'
+// ,'          gl_FragColor = vec4(r, g, b, 1.0);'
+// ,'      };'
+,'      float r = (wave1.x+wave2.x)*0.29799 + 0.4275;' 
+,'      float g = (wave1.y+wave2.y)*0.2236 + 0.596;'
+,'      float b = (wave1.z+wave2.z)*0.0431 + 0.9098;' 
+,'      gl_FragColor = vec4(r, g, b, 1.);'
+// ,'      else {'
+// ,'          gl_FragColor = vec4(r, g, b, 1.0);'
+// ,'      };'
+// ,'      gl_FragColor = vec4(0.29799 + 0.4275, 0.2236 + 0.596, 0.0431 + 0.9098, 1.0);'
+// ,'      gl_FragColor = vec4(0.4275, 0.596, 0.9098, 1.0);'
+,'   }'
+].join('\n');
+
+// START GL PROGRAM
+
+start_gl("canvas1", vertexShader, fragmentShader);
+
+</script>
+
+</html>
